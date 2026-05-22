@@ -20,7 +20,7 @@ export default function Sidebar() {
           <span className="text-xl font-bold">NEXTLearn</span>
         </div>
       </Link>
-      <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
+      <div className="flex flex-row space-x-2 md:flex-col md:space-x-0 md:space-y-2 mt-4">
         {links.map((link) => {
           const LinkIcon = link.icon;
           return (
