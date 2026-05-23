@@ -1,14 +1,20 @@
+'use client';
+
 import Link from 'next/link';
-import { LayoutDashboard, BookOpen, BarChart3, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, BookOpen, BarChart3, GraduationCap, LogIn, LogOut, Map } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 const links = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Explore Topics', href: '/dashboard/explore', icon: BookOpen },
+  { name: 'Knowledge Map', href: '/dashboard/map', icon: Map },
   { name: 'My Progress', href: '/dashboard/progress', icon: BarChart3 },
 ];
 
 export default function Sidebar() {
+  const { data: session } = useSession();
+
   return (
     <div className="flex h-full flex-col px-3 py-4 md:px-2 bg-gray-50 border-r">
       <Link
@@ -34,6 +40,26 @@ export default function Sidebar() {
             </Link>
           );
         })}
+        
+        <div className="hidden h-auto w-full grow rounded-md bg-gray-50 md:block"></div>
+        
+        {session ? (
+          <button 
+            onClick={() => signOut()}
+            className="flex h-[48px] w-full grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-red-50 hover:text-red-600 md:flex-none md:justify-start md:p-2 md:px-3"
+          >
+            <LogOut className="w-6" />
+            <p className="hidden md:block">Sign Out ({session.user?.name || 'User'})</p>
+          </button>
+        ) : (
+          <button 
+            onClick={() => signIn()}
+            className="flex h-[48px] w-full grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-600 md:flex-none md:justify-start md:p-2 md:px-3"
+          >
+            <LogIn className="w-6" />
+            <p className="hidden md:block">Sign In</p>
+          </button>
+        )}
       </div>
     </div>
   );

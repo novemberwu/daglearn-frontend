@@ -16,7 +16,7 @@ export default function Page() {
             <strong>Master New Skills.</strong> Explore the knowledge and unlock your potential with our adaptive learning platform.
           </p>
           <Link
-            href="/dashboard"
+            href="/login"
             className="flex items-center gap-5 self-start rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-500 md:text-base"
           >
             <span>Start Learning</span> <ArrowRight className="w-5 md:w-6" />

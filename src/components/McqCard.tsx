@@ -9,10 +9,11 @@ import { apiService } from '@/services/api';
 interface McqCardProps {
   mcq: McqDto;
   userId: string;
+  token?: string;
   onResult: (result: AttemptResult) => void;
 }
 
-export default function McqCard({ mcq, userId, onResult }: McqCardProps) {
+export default function McqCard({ mcq, userId, token, onResult }: McqCardProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<AttemptResult | null>(null);
@@ -22,7 +23,7 @@ export default function McqCard({ mcq, userId, onResult }: McqCardProps) {
     
     setIsSubmitting(true);
     try {
-      const response = await apiService.submitAnswer(userId, mcq.id, selectedOption);
+      const response = await apiService.submitAnswer(userId, mcq.id, selectedOption, token);
       setResult(response);
       onResult(response);
     } catch (error) {

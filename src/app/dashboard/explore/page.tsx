@@ -1,24 +1,28 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
 import { Topic } from '@/types';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Lock } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 export default function ExplorePage() {
+  const { data: session, status } = useSession();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Hardcoded user for MVP
-  const userId = 'user-1';
-
   useEffect(() => {
     const fetchUnlockedTopics = async () => {
+      if (status !== 'authenticated' || !session) return;
+      
       try {
         setLoading(true);
-        const data = await apiService.getUnlockedTopics(userId);
+        // Using session.user.id which maps to our Neo4j user ID
+        const data = await apiService.getUnlockedTopics(session.user.id, session.accessToken);
         setTopics(data);
       } catch (err) {
         setError('Failed to load unlocked topics. Please try again later.');
@@ -28,10 +32,15 @@ export default function ExplorePage() {
       }
     };
 
-    fetchUnlockedTopics();
-  }, []);
+    if (status === 'authenticated') {
+      fetchUnlockedTopics();
+    } else if (status === 'unauthenticated') {
+      setLoading(false);
+      setError('Please sign in to view unlocked topics.');
+    }
+  }, [session, status]);
 
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
