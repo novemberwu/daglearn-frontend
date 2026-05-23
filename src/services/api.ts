@@ -1,4 +1,4 @@
-import { Topic, McqDto, ConceptProficiency, AttemptResult } from "@/types";
+import { Topic, McqDto, ConceptProficiency, AttemptResult, Course } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
@@ -13,6 +13,22 @@ const getHeaders = (token?: string) => {
 };
 
 export const apiService = {
+  async getCourses(token?: string): Promise<Course[]> {
+    const res = await fetch(`${API_BASE_URL}/courses`, {
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Failed to fetch courses");
+    return res.json();
+  },
+
+  async getCourseById(id: string, token?: string): Promise<Course> {
+    const res = await fetch(`${API_BASE_URL}/courses/${id}`, {
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Failed to fetch course");
+    return res.json();
+  },
+
   async getTopics(token?: string): Promise<Topic[]> {
     const res = await fetch(`${API_BASE_URL}/topics`, {
       headers: getHeaders(token),

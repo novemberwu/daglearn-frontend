@@ -6,6 +6,13 @@ export interface Topic {
   prerequisites: Topic[];
 }
 
+export interface Course {
+  id: string;
+  name: string;
+  subject: string;
+  topics?: Topic[];
+}
+
 export interface McqDto {
   id: string;
   content: string;

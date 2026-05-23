@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
-import { Topic } from '@/types';
+import { Topic, Course } from '@/types';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Lock } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -12,20 +12,25 @@ import { useSession } from 'next-auth/react';
 export default function ExplorePage() {
   const { data: session, status } = useSession();
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUnlockedTopics = async () => {
+    const fetchData = async () => {
       if (status !== 'authenticated' || !session) return;
       
       try {
         setLoading(true);
         // Using session.user.id which maps to our Neo4j user ID
-        const data = await apiService.getUnlockedTopics(session.user.id, session.accessToken);
-        setTopics(data);
+        const [unlockedTopics, courseData] = await Promise.all([
+          apiService.getUnlockedTopics(session.user.id, session.accessToken),
+          apiService.getCourseById('AP-CSA', session.accessToken)
+        ]);
+        setTopics(unlockedTopics);
+        setCourse(courseData);
       } catch (err) {
-        setError('Failed to load unlocked topics. Please try again later.');
+        setError('Failed to load data. Please try again later.');
         console.error(err);
       } finally {
         setLoading(false);
@@ -33,7 +38,7 @@ export default function ExplorePage() {
     };
 
     if (status === 'authenticated') {
-      fetchUnlockedTopics();
+      fetchData();
     } else if (status === 'unauthenticated') {
       setLoading(false);
       setError('Please sign in to view unlocked topics.');
@@ -58,7 +63,12 @@ export default function ExplorePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6 font-serif">Explore Topics</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold font-serif">Explore Topics</h1>
+        {course && (
+          <p className="text-indigo-600 font-medium text-sm mt-1">Course: {course.name}</p>
+        )}
+      </div>
       
       {topics.length === 0 ? (
         <div className="bg-amber-50 border border-amber-200 p-8 rounded-xl text-center">
@@ -95,4 +105,3 @@ export default function ExplorePage() {
     </div>
   );
 }
-

@@ -2,25 +2,35 @@
 
 import { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
-import { ConceptProficiency } from '@/types';
+import { ConceptProficiency, Course } from '@/types';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
-import { BarChart3, Award, Loader2 } from 'lucide-react';
+import { Award, Loader2 } from 'lucide-react';
 
 export default function ProgressPage() {
   const { data: session, status } = useSession();
   const [proficiencies, setProficiencies] = useState<ConceptProficiency[]>([]);
+  const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProficiencies = async () => {
-      if (status !== 'authenticated' || !session) return;
+    const fetchData = async () => {
+      if (status !== 'authenticated' || !session) {
+        if (status === 'unauthenticated') {
+          setLoading(false);
+        }
+        return;
+      }
 
       try {
         setLoading(true);
-        const data = await apiService.getConceptProficiencies(session.user.id, session.accessToken);
-        setProficiencies(data);
+        const [profData, courseData] = await Promise.all([
+          apiService.getConceptProficiencies(session.user.id, session.accessToken),
+          apiService.getCourseById('AP-CSA', session.accessToken)
+        ]);
+        setProficiencies(profData);
+        setCourse(courseData);
       } catch (err) {
         setError('Failed to load progress. Please try again later.');
         console.error(err);
@@ -29,11 +39,7 @@ export default function ProgressPage() {
       }
     };
 
-    if (status === 'authenticated') {
-      fetchProficiencies();
-    } else if (status === 'unauthenticated') {
-      setLoading(false);
-    }
+    fetchData();
   }, [session, status]);
 
   if (status === 'loading' || loading) {
@@ -48,9 +54,22 @@ export default function ProgressPage() {
     return <div className="text-center py-12 text-red-600">Please sign in to view your progress.</div>;
   }
 
+  if (error) {
+    return (
+      <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6 font-serif">My Learning Progress</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold font-serif">My Learning Progress</h1>
+        {course && (
+          <p className="text-indigo-600 font-medium text-sm mt-1">Course: {course.name}</p>
+        )}
+      </div>
       
       <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6 mb-8 flex items-center gap-6">
         <div className="bg-indigo-600 p-4 rounded-full text-white">
@@ -58,7 +77,7 @@ export default function ProgressPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold text-indigo-900">Keep it up, {session?.user?.name || 'Student'}!</h2>
-          <p className="text-indigo-700">You're making steady progress across {proficiencies.length} concepts.</p>
+          <p className="text-indigo-700">You&apos;re making steady progress across {proficiencies.length} concepts.</p>
         </div>
       </div>
 

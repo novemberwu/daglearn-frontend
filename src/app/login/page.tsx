@@ -110,6 +110,9 @@ function LoginForm() {
       </form>
 
       <div className="text-center text-sm">
+        <p className="text-gray-500 italic">
+          Default credentials: rachel@example.com / password
+        </p>
         <div className="mt-4">
           <Link href="/" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
             Return to Landing Page

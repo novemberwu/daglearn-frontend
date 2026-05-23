@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
-import { Topic } from '@/types';
+import { Topic, Course } from '@/types';
 import KnowledgeGraph from '@/components/KnowledgeGraph';
 import { Loader2, Map as MapIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -10,18 +10,23 @@ import { useSession } from 'next-auth/react';
 export default function KnowledgeMapPage() {
   const { data: session, status } = useSession();
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadTopics() {
+    async function loadData() {
       if (status !== 'authenticated' || !session) return;
       try {
         setIsLoading(true);
-        const data = await apiService.getTopics(session.accessToken);
-        setTopics(data);
+        const [topicData, courseData] = await Promise.all([
+          apiService.getTopics(session.accessToken),
+          apiService.getCourseById('AP-CSA', session.accessToken)
+        ]);
+        setTopics(topicData);
+        setCourse(courseData);
       } catch (err) {
-        console.error('Failed to load topics:', err);
+        console.error('Failed to load data:', err);
         setError('Could not load the knowledge graph. Please try again later.');
       } finally {
         setIsLoading(false);
@@ -29,7 +34,7 @@ export default function KnowledgeMapPage() {
     }
 
     if (status === 'authenticated') {
-      loadTopics();
+      loadData();
     } else if (status === 'unauthenticated') {
       setIsLoading(false);
     }
@@ -49,13 +54,16 @@ export default function KnowledgeMapPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-3 mb-6">
-        <MapIcon className="w-8 h-8 text-indigo-600" />
-        <h1 className="text-2xl font-bold font-serif">AP CSA Learning Path</h1>
+      <div className="flex items-center gap-3 mb-2">
+        <MapIcon className="w-5 h-5 text-indigo-600" />
+        <h1 className="text-2xl font-bold font-serif">Learning Path</h1>
       </div>
+      {course && (
+        <p className="text-indigo-600 font-medium text-sm mb-4 ml-8">Course: {course.name}</p>
+      )}
 
       <p className="text-gray-600 mb-8">
-        This interactive map shows the prerequisites for each topic in the AP Computer Science A curriculum. 
+        This interactive map shows the prerequisites for each topic in the curriculum. 
         Follow the arrows to see your path to mastery.
       </p>
 
