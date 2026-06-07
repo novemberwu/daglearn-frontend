@@ -99,7 +99,11 @@ function renderLineContent(text: string): React.ReactNode {
             </code>
           );
         } else {
-          return renderTextWithMath(subPart);
+          return (
+            <React.Fragment key={subIndex}>
+              {renderTextWithMath(subPart)}
+            </React.Fragment>
+          );
         }
       })}
     </>
@@ -168,7 +172,11 @@ function renderTextWithMath(text: string): React.ReactNode {
             </span>
           );
         } else {
-          return renderBoldText(part);
+          return (
+            <React.Fragment key={index}>
+              {renderBoldText(part)}
+            </React.Fragment>
+          );
         }
       })}
     </>
@@ -190,7 +198,11 @@ function renderBoldText(text: string): React.ReactNode {
             </strong>
           );
         } else {
-          return part;
+          return (
+            <React.Fragment key={index}>
+              {part}
+            </React.Fragment>
+          );
         }
       })}
     </>
