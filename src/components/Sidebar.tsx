@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { LayoutDashboard, BookOpen, BarChart3, GraduationCap, LogIn, LogOut, Map } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useSession, signIn, signOut } from 'next-auth/react';
 
 const links = [

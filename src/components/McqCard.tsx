@@ -5,6 +5,7 @@ import { McqDto, AttemptResult } from '@/types';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiService } from '@/services/api';
+import FormattedText from './FormattedText';
 
 interface McqCardProps {
   mcq: McqDto;
@@ -35,7 +36,9 @@ export default function McqCard({ mcq, userId, token, onResult }: McqCardProps) 
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{mcq.content}</h3>
+      <div className="text-lg font-semibold text-gray-900 mb-4">
+        <FormattedText text={mcq.content} />
+      </div>
       <div className="space-y-3">
         {mcq.options.map((option) => (
           <button
@@ -52,7 +55,7 @@ export default function McqCard({ mcq, userId, token, onResult }: McqCardProps) 
               (isSubmitting || result !== null) && "cursor-not-allowed"
             )}
           >
-            {option}
+            <FormattedText text={option} />
           </button>
         ))}
       </div>
