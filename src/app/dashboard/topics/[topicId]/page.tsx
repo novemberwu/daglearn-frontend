@@ -16,6 +16,39 @@ interface PageProps {
   params: Promise<{ topicId: string }>;
 }
 
+interface DocSection {
+  title: string;
+  content: string;
+}
+
+function parseDocSections(content: string): DocSection[] {
+  if (!content) return [];
+  const parts = content.split(/\n?###\s+/);
+  const sections: DocSection[] = [];
+  
+  if (parts[0].trim()) {
+    sections.push({
+      title: "",
+      content: parts[0].trim()
+    });
+  }
+  
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i];
+    const lines = part.split('\n');
+    const title = lines[0].trim();
+    const contentText = lines.slice(1).join('\n').trim();
+    if (title || contentText) {
+      sections.push({
+        title,
+        content: contentText
+      });
+    }
+  }
+  
+  return sections;
+}
+
 export default function TopicModulePage({ params }: PageProps) {
   const { data: session, status } = useSession();
   const { topicId } = React.use(params);
@@ -249,18 +282,32 @@ export default function TopicModulePage({ params }: PageProps) {
               </div>
 
               {/* Documents Section */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-indigo-500" /> Concept Reading
                 </h3>
                 {documents.length > 0 ? (
-                  <div className="space-y-6">
-                    {documents.map((doc) => (
-                      <div key={doc.id} className="bg-white p-6 rounded-xl border border-gray-200 shadow-3xs">
-                        {doc.title && <h4 className="text-lg font-bold text-gray-900 mb-3 border-b border-gray-50 pb-2">{doc.title}</h4>}
-                        <FormattedText text={doc.content} className="text-gray-800 leading-relaxed text-base prose prose-indigo max-w-none" />
-                      </div>
-                    ))}
+                  <div className="space-y-8">
+                    {documents.map((doc) => {
+                      const sections = parseDocSections(doc.content);
+                      return (
+                        <div key={doc.id} className="space-y-4">
+                          {doc.title && (
+                            <h4 className="text-xl font-extrabold text-indigo-950 px-1">{doc.title}</h4>
+                          )}
+                          <div className="space-y-6">
+                            {sections.map((section, idx) => (
+                              <div key={idx} className="bg-white p-6 rounded-xl border border-gray-200 shadow-3xs">
+                                {section.title && (
+                                  <h5 className="text-lg font-bold text-gray-900 mb-3 border-b border-gray-50 pb-2">{section.title}</h5>
+                                )}
+                                <FormattedText text={section.content} className="text-gray-800 leading-relaxed text-base prose prose-indigo max-w-none" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-gray-500 italic py-6 bg-gray-50 rounded-xl px-6 text-sm border border-gray-100">

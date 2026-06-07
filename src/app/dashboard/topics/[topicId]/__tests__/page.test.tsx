@@ -42,7 +42,7 @@ const mockConcepts = [
 ];
 
 const mockDocs = [
-  { id: 'D-1', title: 'Intro to Nodes', content: 'A node contains data and a next reference.' }
+  { id: 'D-1', title: 'Intro to Nodes', content: '### Section 1\nA node contains data.\n### Section 2\nA next pointer connects nodes.' }
 ];
 
 const mockMcqs = [
@@ -79,7 +79,10 @@ test('TopicModulePage loads topic, concepts, and auto-selects first concept cont
     
     // Check that document content is displayed
     expect(screen.getByText('Intro to Nodes')).toBeDefined();
+    expect(screen.getByText('Section 1')).toBeDefined();
     expect(screen.getByText(/A node contains data/)).toBeDefined();
+    expect(screen.getByText('Section 2')).toBeDefined();
+    expect(screen.getByText(/A next pointer connects nodes/)).toBeDefined();
     
     // Check that MCQ card question content is displayed
     expect(screen.getByText(/What happens if you lose the head pointer/)).toBeDefined();
