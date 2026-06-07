@@ -46,3 +46,14 @@ test('handles mixed content with multiple backticks', () => {
   expect(screen.getByText('print("hi")')).toBeDefined();
   expect(screen.getByText(/Last text\./)).toBeDefined();
 });
+
+test('renders inline LaTeX math formulas with superscript exponents', () => {
+  render(<FormattedText text="The range is from $-2^{31}$ to $2^{31}-1$." />);
+  expect(screen.getByText(/The range is from/)).toBeDefined();
+  expect(screen.getByText(/to/)).toBeDefined();
+  
+  // Find mathematical nodes precisely
+  expect(screen.getByText(/−2/)).toBeDefined();
+  expect(screen.getAllByText('31')[0]).toBeDefined();
+  expect(screen.getByText(/2.*−1/)).toBeDefined();
+});

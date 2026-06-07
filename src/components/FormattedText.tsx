@@ -71,7 +71,7 @@ export default function FormattedText({ text, className }: FormattedTextProps) {
                 } else {
                   return (
                     <span key={subIndex} className="whitespace-pre-line">
-                      {subPart}
+                      {renderTextWithMath(subPart)}
                     </span>
                   );
                 }
@@ -81,5 +81,74 @@ export default function FormattedText({ text, className }: FormattedTextProps) {
         }
       })}
     </div>
+  );
+}
+
+function renderMathFormula(formula: string): React.ReactNode[] {
+  const processed = formula
+    .replace(/\\le/g, '≤')
+    .replace(/\\ge/g, '≥')
+    .replace(/\\ne/g, '≠')
+    .replace(/\\times/g, '×')
+    .replace(/\\cdot/g, '·')
+    .replace(/\\approx/g, '≈')
+    .replace(/\\infty/g, '∞')
+    .replace(/\\minus/g, '−')
+    .replace(/-/g, '−');
+
+  const regex = /(\^\{([^}]+)\}|\^([a-zA-Z0-9\-+]+)|_\{([^}]+)\}|_([a-zA-Z0-9\-+]+))/g;
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = regex.exec(processed)) !== null) {
+    const matchIndex = match.index;
+    if (matchIndex > lastIndex) {
+      nodes.push(processed.slice(lastIndex, matchIndex));
+    }
+    
+    const isSup = match[1].startsWith('^');
+    const content = isSup 
+      ? (match[2] || match[3])
+      : (match[4] || match[5]);
+      
+    if (isSup) {
+      nodes.push(<sup key={matchIndex} className="text-[0.75em] leading-none ml-0.5">{content}</sup>);
+    } else {
+      nodes.push(<sub key={matchIndex} className="text-[0.75em] leading-none ml-0.5">{content}</sub>);
+    }
+    lastIndex = regex.lastIndex;
+  }
+  
+  if (lastIndex < processed.length) {
+    nodes.push(processed.slice(lastIndex));
+  }
+  
+  return nodes;
+}
+
+function renderTextWithMath(text: string): React.ReactNode {
+  if (!text) return "";
+  const parts = text.split('$');
+  
+  return (
+    <>
+      {parts.map((part, index) => {
+        const isMath = index % 2 === 1;
+        if (isMath) {
+          return (
+            <span 
+              key={index} 
+              className="font-serif italic text-gray-900 dark:text-gray-100 px-0.5 select-all"
+              style={{ fontVariantLigatures: 'none' }}
+            >
+              {renderMathFormula(part)}
+            </span>
+          );
+        } else {
+          return part;
+        }
+      })}
+    </>
   );
 }
