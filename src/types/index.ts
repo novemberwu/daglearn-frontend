@@ -36,3 +36,15 @@ export interface AttemptResult {
   conceptId: string;
   newProficiencyPercentage: number;
 }
+
+export interface Concept {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  content: string;
+}
