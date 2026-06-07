@@ -9,8 +9,8 @@ test('renders plain text normally', () => {
 
 test('renders inline code with custom formatting', () => {
   render(<FormattedText text="Use `int x = 5;` to declare x." />);
-  expect(screen.getByText('Use')).toBeDefined();
-  expect(screen.getByText('to declare x.')).toBeDefined();
+  expect(screen.getByText(/Use/)).toBeDefined();
+  expect(screen.getByText(/to declare x\./)).toBeDefined();
   
   const codeElement = screen.getByText('int x = 5;');
   expect(codeElement.tagName).toBe('CODE');
@@ -56,4 +56,27 @@ test('renders inline LaTeX math formulas with superscript exponents', () => {
   expect(screen.getByText(/−2/)).toBeDefined();
   expect(screen.getAllByText('31')[0]).toBeDefined();
   expect(screen.getByText(/2.*−1/)).toBeDefined();
+});
+
+test('renders text within a pair of double asterisks as bold', () => {
+  render(<FormattedText text="Make this **bold** text." />);
+  expect(screen.getByText(/Make this/)).toBeDefined();
+  expect(screen.getByText('bold')).toBeDefined();
+  expect(screen.getByText(/text\./)).toBeDefined();
+  
+  const boldElement = screen.getByText('bold');
+  expect(boldElement.tagName).toBe('STRONG');
+  expect(boldElement.className).toContain('font-bold');
+});
+
+test('renders lines starting with a single asterisk as bullet points', () => {
+  render(<FormattedText text={`* Item 1
+* Item 2 with **bold** content`} />);
+  expect(screen.getByText('Item 1')).toBeDefined();
+  expect(screen.getByText(/Item 2 with/)).toBeDefined();
+  expect(screen.getByText(/content/)).toBeDefined();
+  expect(screen.getByText('bold')).toBeDefined();
+  
+  const boldElement = screen.getByText('bold');
+  expect(boldElement.tagName).toBe('STRONG');
 });

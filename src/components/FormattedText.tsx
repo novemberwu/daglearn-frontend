@@ -52,35 +52,57 @@ export default function FormattedText({ text, className }: FormattedTextProps) {
             </div>
           );
         } else {
-          // It's text, which could contain inline code blocks split by a single backtick
-          const subParts = part.split('`');
+          // Split non-code-blocks by line breaks to check for bullet points and format paragraphs
+          const lines = part.split('\n');
           return (
-            <span key={index}>
-              {subParts.map((subPart, subIndex) => {
-                const isInlineCode = subIndex % 2 === 1;
-                if (isInlineCode) {
+            <div key={index} className="space-y-1 my-1">
+              {lines.map((line, lineIndex) => {
+                const isBullet = line.trimStart().startsWith('* ');
+                if (isBullet) {
+                  const content = line.trimStart().slice(2);
                   return (
-                    <code
-                      key={subIndex}
-                      style={{ fontVariantLigatures: 'none', fontFeatureSettings: '"liga" 0, "clig" 0' }}
-                      className="px-1.5 py-0.5 mx-0.5 rounded font-mono text-[0.9em] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-pink-600 dark:text-pink-400 font-semibold whitespace-nowrap"
-                    >
-                      {subPart}
-                    </code>
+                    <li key={lineIndex} className="list-disc ml-6 my-1 pl-1 text-gray-800 dark:text-gray-200 text-base">
+                      {renderLineContent(content)}
+                    </li>
                   );
                 } else {
                   return (
-                    <span key={subIndex} className="whitespace-pre-line">
-                      {renderTextWithMath(subPart)}
-                    </span>
+                    <div key={lineIndex} className="min-h-[1.5rem]">
+                      {renderLineContent(line)}
+                    </div>
                   );
                 }
               })}
-            </span>
+            </div>
           );
         }
       })}
     </div>
+  );
+}
+
+function renderLineContent(text: string): React.ReactNode {
+  // It's text, which could contain inline code blocks split by a single backtick
+  const subParts = text.split('`');
+  return (
+    <>
+      {subParts.map((subPart, subIndex) => {
+        const isInlineCode = subIndex % 2 === 1;
+        if (isInlineCode) {
+          return (
+            <code
+              key={subIndex}
+              style={{ fontVariantLigatures: 'none', fontFeatureSettings: '"liga" 0, "clig" 0' }}
+              className="px-1.5 py-0.5 mx-0.5 rounded font-mono text-[0.9em] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-pink-600 dark:text-pink-400 font-semibold whitespace-nowrap"
+            >
+              {subPart}
+            </code>
+          );
+        } else {
+          return renderTextWithMath(subPart);
+        }
+      })}
+    </>
   );
 }
 
@@ -144,6 +166,28 @@ function renderTextWithMath(text: string): React.ReactNode {
             >
               {renderMathFormula(part)}
             </span>
+          );
+        } else {
+          return renderBoldText(part);
+        }
+      })}
+    </>
+  );
+}
+
+function renderBoldText(text: string): React.ReactNode {
+  if (!text) return "";
+  const parts = text.split('**');
+  
+  return (
+    <>
+      {parts.map((part, index) => {
+        const isBold = index % 2 === 1;
+        if (isBold) {
+          return (
+            <strong key={index} className="font-bold text-gray-950 dark:text-white">
+              {part}
+            </strong>
           );
         } else {
           return part;
