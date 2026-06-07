@@ -18,7 +18,7 @@ test('McqCard renders question and handles submission', async () => {
   const onResult = vi.fn();
   render(<McqCard mcq={MOCK_MCQS[0]} userId="test-user" onResult={onResult} />);
 
-  expect(screen.getByText(MOCK_MCQS[0].content)).toBeDefined();
+  expect(screen.getByText(/What happens if you lose the head pointer/)).toBeDefined();
   
   // Select an option
   const option = screen.getByText(MOCK_MCQS[0].options[0]);
@@ -29,7 +29,7 @@ test('McqCard renders question and handles submission', async () => {
   fireEvent.click(submitBtn);
 
   await waitFor(() => {
-    expect(apiService.submitAnswer).toHaveBeenCalledWith("test-user", MOCK_MCQS[0].id, MOCK_MCQS[0].options[0]);
+    expect(apiService.submitAnswer).toHaveBeenCalledWith("test-user", MOCK_MCQS[0].id, MOCK_MCQS[0].options[0], undefined);
     expect(onResult).toHaveBeenCalledWith(mockResult);
     expect(screen.getByText(/Correct! Concept Mastery: 100%/)).toBeDefined();
   });

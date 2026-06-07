@@ -1,4 +1,4 @@
-import { Topic, McqDto, ConceptProficiency, AttemptResult, Course } from "@/types";
+import { Topic, McqDto, ConceptProficiency, AttemptResult, Course, Concept, Document } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
@@ -68,6 +68,30 @@ export const apiService = {
       body: JSON.stringify({ mcqId, answer }),
     });
     if (!res.ok) throw new Error("Failed to submit answer");
+    return res.json();
+  },
+
+  async getConceptsByTopic(topicId: string, token?: string): Promise<Concept[]> {
+    const res = await fetch(`${API_BASE_URL}/topics/${topicId}/concepts`, {
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Failed to fetch concepts");
+    return res.json();
+  },
+
+  async getMcqsByConcept(conceptId: string, token?: string): Promise<McqDto[]> {
+    const res = await fetch(`${API_BASE_URL}/topics/concepts/${conceptId}/mcqs`, {
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Failed to fetch MCQs for concept");
+    return res.json();
+  },
+
+  async getDocumentsByConcept(conceptId: string, token?: string): Promise<Document[]> {
+    const res = await fetch(`${API_BASE_URL}/topics/concepts/${conceptId}/documents`, {
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Failed to fetch documents for concept");
     return res.json();
   },
 };
