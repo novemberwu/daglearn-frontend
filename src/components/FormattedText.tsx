@@ -52,23 +52,149 @@ export default function FormattedText({ text, className }: FormattedTextProps) {
             </div>
           );
         } else {
-          // Split non-code-blocks by line breaks to check for bullet points and format paragraphs
+          // Split non-code-blocks by line breaks to check for bullet points, tables, and format paragraphs
           const lines = part.split('\n');
+          
+          interface TableBlock {
+            type: 'table';
+            rows: string[][];
+            alignments: ('left' | 'center' | 'right')[];
+          }
+          
+          interface NormalBlock {
+            type: 'line';
+            lineIndex: number;
+            text: string;
+          }
+          
+          interface BulletBlock {
+            type: 'bullet';
+            lineIndex: number;
+            text: string;
+          }
+          
+          type Block = TableBlock | NormalBlock | BulletBlock;
+          
+          const blocks: Block[] = [];
+          let currentTableLines: string[] = [];
+          
+          const flushTable = () => {
+            if (currentTableLines.length > 0) {
+              const headerRaw = currentTableLines[0];
+              const headers = headerRaw.split(/(?<!\\)\|/).slice(1, -1).map(s => s.trim().replace(/\\\|/g, '|'));
+              
+              let alignments: ('left' | 'center' | 'right')[] = [];
+              let bodyRowsStart = 1;
+              
+              if (currentTableLines.length > 1) {
+                const separatorRaw = currentTableLines[1];
+                const separatorCells = separatorRaw.split(/(?<!\\)\|/).slice(1, -1).map(s => s.trim());
+                const isSeparator = separatorCells.length > 0 && separatorCells.every(cell => /^[:-]+$/.test(cell));
+                if (isSeparator) {
+                  alignments = separatorCells.map(cell => {
+                    if (cell.startsWith(':') && cell.endsWith(':')) return 'center';
+                    if (cell.endsWith(':')) return 'right';
+                    return 'left';
+                  });
+                  bodyRowsStart = 2;
+                }
+              }
+              
+              const rows: string[][] = [];
+              for (let i = bodyRowsStart; i < currentTableLines.length; i++) {
+                const rowCells = currentTableLines[i].split(/(?<!\\)\|/).slice(1, -1).map(s => s.trim().replace(/\\\|/g, '|'));
+                const paddedCells = Array.from({ length: headers.length }, (_, idx) => rowCells[idx] || '');
+                rows.push(paddedCells);
+              }
+              
+              blocks.push({
+                type: 'table',
+                rows: [headers, ...rows],
+                alignments
+              });
+              currentTableLines = [];
+            }
+          };
+          
+          for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            const line = lines[lineIndex];
+            const isTableRow = /^\s*\|.*\|\s*$/.test(line);
+            
+            if (isTableRow) {
+              currentTableLines.push(line);
+            } else {
+              flushTable();
+              const isBullet = line.trimStart().startsWith('* ');
+              if (isBullet) {
+                blocks.push({
+                  type: 'bullet',
+                  lineIndex,
+                  text: line.trimStart().slice(2)
+                });
+              } else {
+                blocks.push({
+                  type: 'line',
+                  lineIndex,
+                  text: line
+                });
+              }
+            }
+          }
+          flushTable();
+
+          const getAlignClass = (align?: 'left' | 'center' | 'right') => {
+            if (align === 'center') return 'text-center';
+            if (align === 'right') return 'text-right';
+            return 'text-left';
+          };
+
           return (
             <div key={index} className="space-y-1 my-1">
-              {lines.map((line, lineIndex) => {
-                const isBullet = line.trimStart().startsWith('* ');
-                if (isBullet) {
-                  const content = line.trimStart().slice(2);
+              {blocks.map((block, blockIndex) => {
+                if (block.type === 'table') {
+                  const [headers, ...bodyRows] = block.rows;
                   return (
-                    <li key={lineIndex} className="list-disc ml-6 my-1 pl-1 text-gray-800 dark:text-gray-200 text-base">
-                      {renderLineContent(content)}
+                    <div key={blockIndex} className="my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 shadow-xs overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                        <thead className="bg-gray-50 dark:bg-gray-800/50">
+                          <tr>
+                            {headers.map((headerCell, i) => (
+                              <th 
+                                key={i} 
+                                className={`px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100 ${getAlignClass(block.alignments[i])} border-b border-gray-200 dark:border-gray-800`}
+                              >
+                                {renderLineContent(headerCell)}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900/50">
+                          {bodyRows.map((row, rowIndex) => (
+                            <tr key={rowIndex} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                              {row.map((cell, cellIndex) => (
+                                <td 
+                                  key={cellIndex} 
+                                  className={`px-4 py-3 text-sm text-gray-700 dark:text-gray-300 ${getAlignClass(block.alignments[cellIndex])}`}
+                                >
+                                  {renderLineContent(cell)}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                } else if (block.type === 'bullet') {
+                  return (
+                    <li key={block.lineIndex} className="list-disc ml-6 my-1 pl-1 text-gray-800 dark:text-gray-200 text-base">
+                      {renderLineContent(block.text)}
                     </li>
                   );
                 } else {
                   return (
-                    <div key={lineIndex} className="min-h-[1.5rem]">
-                      {renderLineContent(line)}
+                    <div key={block.lineIndex} className="min-h-[1.5rem]">
+                      {renderLineContent(block.text)}
                     </div>
                   );
                 }

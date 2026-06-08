@@ -80,3 +80,44 @@ test('renders lines starting with a single asterisk as bullet points', () => {
   const boldElement = screen.getByText('bold');
   expect(boldElement.tagName).toBe('STRONG');
 });
+
+test('renders a markdown table with headers, body, alignments, and custom formatting', () => {
+  const tableMarkdown = `| Type | Set of Values | Common Operations | Sample Value |
+| :--- | :--- | :--- | :--- |
+| **int** | Integers | \`+ - * / %\` | \`1\`, \`2\`, \`-34353\` |
+| **double** | Floating-point numbers | \`+ - * / %\` | \`3.14\` |
+| **boolean** | Boolean values | \`&& \\|\\| !\` | \`true\`, \`false\` |
+| **char** | Characters | None | \`'A'\`, \`'1'\`, \`'\\n'\` |
+| **String** | Sequences of characters | \`+\` (concatenation) | \`"Hello World"\` |`;
+
+  render(<FormattedText text={tableMarkdown} />);
+
+  // Check headers exist
+  expect(screen.getByText('Type')).toBeDefined();
+  expect(screen.getByText('Set of Values')).toBeDefined();
+  expect(screen.getByText('Common Operations')).toBeDefined();
+  expect(screen.getByText('Sample Value')).toBeDefined();
+
+  // Check custom bolding is rendered inside table
+  const intElement = screen.getByText('int');
+  expect(intElement.tagName).toBe('STRONG');
+
+  const doubleElement = screen.getByText('double');
+  expect(doubleElement.tagName).toBe('STRONG');
+
+  // Check cell content and check that escaped pipes are parsed cleanly
+  expect(screen.getByText('Integers')).toBeDefined();
+  
+  // Check inline code blocks in table
+  const plusMinusPercentElements = screen.getAllByText('+ - * / %');
+  expect(plusMinusPercentElements.length).toBe(2); // for int and double
+  plusMinusPercentElements.forEach(el => {
+    expect(el.tagName).toBe('CODE');
+  });
+
+  const logicalOperatorsElement = screen.getByText('&& || !');
+  expect(logicalOperatorsElement.tagName).toBe('CODE');
+
+  const stringValElement = screen.getByText('"Hello World"');
+  expect(stringValElement.tagName).toBe('CODE');
+});
